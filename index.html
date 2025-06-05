@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT Lab</title>
+    <link rel="icon" type="image/png" href="imagenes/favicon.png">
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #166d67;
+            --accent: #ff914d;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            min-height: 100vh;
+        }
+        .topbar {
+            width: 100%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 2px 10px #0001;
+            min-height: 54px;
+        }
+        .topbar h1 {
+            font-size: 1.01rem;
+            color: var(--dark);
+            margin: 0;
+            font-weight: 700;  /* NEGRITA */
+            letter-spacing: 0.1px;
+            padding-right: 50px;
+        }
+        #aboutBtn {
+            position: absolute;
+            right: 16px;
+            top: 11px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--accent);
+            transition: color 0.2s;
+        }
+        #aboutBtn:hover {
+            color: #fb6600;
+        }
+        /* ---- MOBILE FIRST: 3 COLUMNAS ---- */
+        .gpt-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 11px;
+            padding: 12px 4px;
+            max-width: 430px;
+            margin: 0 auto;
+        }
+        .gpt-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px #0001;
+            padding: 14px 4px 10px 4px;
+            text-decoration: none;
+            color: var(--dark);
+            transition: transform 0.14s;
+            cursor: pointer;
+        }
+        .gpt-card:hover {
+            transform: translateY(-3px) scale(1.04);
+            box-shadow: 0 4px 16px #0002;
+            background: #f5f7fb;
+        }
+        .gpt-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 1px 4px #0002;
+            margin-bottom: 8px;
+            border: 2px solid var(--light);
+            background: #e9ecef;
+        }
+        .gpt-card p {
+            margin: 0;
+            font-size: 0.80rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        @media (min-width: 600px) {
+            .gpt-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 18px;
+                padding: 32px 16px;
+                max-width: 560px;
+            }
+            .gpt-card img {
+                width: 68px;
+                height: 68px;
+            }
+        }
+        @media (min-width: 900px) {
+            .gpt-grid {
+                grid-template-columns: repeat(5, 1fr);
+                max-width: 800px;
+            }
+            .gpt-card img {
+                width: 72px;
+                height: 72px;
+            }
+        }
+        @media (max-width: 400px) {
+            .gpt-grid {
+                gap: 6px;
+                padding: 6px 1px;
+            }
+            .gpt-card img {
+                width: 48px;
+                height: 48px;
+            }
+        }
+        /* ---- MODAL ---- */
+        #aboutModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.19);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        #aboutModal .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 98vw;
+            width: 410px;
+            /* Cambios para scroll vertical */
+            max-height: 92vh;
+            min-height: 70px;
+            overflow-y: auto;
+            padding: 20px 8px 12px 8px;
+            box-shadow: 0 8px 32px #0003;
+            text-align: left;
+            position: relative;
+        }
+        #aboutModal h2 {
+            margin: 0 0 12px 0;
+            color: var(--primary);
+            font-size: 1.13rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        #aboutModal .close {
+            position: absolute;
+            top: 11px; right: 12px;
+            font-size: 1.35rem;
+            background: none;
+            border: none;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+        .about-gpt-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 10px 0 0 0;
+            padding: 0;
+        }
+        .about-gpt-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fc;
+            border-radius: 12px;
+            padding: 7px 9px;
+        }
+        .about-gpt-item img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--light);
+            background: #e9ecef;
+        }
+        .about-gpt-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .about-gpt-text b {
+            font-size: 0.96rem;
+        }
+        .about-gpt-text span {
+            font-size: 0.75rem;
+        }
+        .about-gpt-link {
+            font-size: 0.79rem;
+            color: var(--primary);
+            text-decoration: underline;
+            margin-top: 2px;
+        }
+        @media (max-width: 500px) {
+            #aboutModal .modal-content {
+                width: 96vw;
+                padding: 9px 1px 7px 3px;
+                max-height: 95vh;
+            }
+            .about-gpt-item img {
+                width: 32px;
+                height: 32px;
+            }
+            .about-gpt-text b {
+                font-size: 0.88rem;
+            }
+        }
+        /* ---- SPLASH SCREEN ---- */
+        #splash {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: white;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.7s;
+        }
+        #splash h2 {
+            font-size: 1.35rem;
+            color: var(--primary);
+            margin: 0 0 10px 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        #splash span {
+            color: var(--secondary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash screen -->
+    <div id="splash">
+        <img src="imagenes/FRAI.png" alt="Logo" style="width:300px;height:300px;margin-bottom:18px;">
+        <h2></h2>
+        <span style="color:#23272c;font-size:1.1rem;margin-top:4px;font-weight:600; display:block; text-align:center;">
+  Transformando la educación con 
+  <span>
+    <span style="font-size:1.13em;color:#ff3399;font-weight:700;">i</span><span style="font-size:1.13em;color:#ff3399;font-weight:700;">A</span>
+  </span>
+</span>
+    </div>
+
+    <!-- Topbar con título y botón About -->
+    <div class="topbar">
+        <h1>Selecciona tu GPT personalizado</h1>
+        <button id="aboutBtn" aria-label="About">⋮</button>
+    </div>
+    <!-- Grid de iconos -->
+    <div class="gpt-grid">
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67f50a0c25988191affb978efeb9e695-gpt-jefatura-de-estudios" target="_blank">
+            <img src="imagenes/jefatura.png" alt="Jefatura Estudios"><p>Jefatura Estudios</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67f003f17a8881919df6e46181afaee5-orientacion" target="_blank">
+            <img src="imagenes/orientacion.png" alt="Orientación"><p>Orientación</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67d275a93b848191b306a0f2c67ab000-investigador-educativo" target="_blank">
+            <img src="imagenes/investigador.png" alt="Investigador Educativo"><p>Investigador Educativo</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67974c776b108191b02672c6c0176868-coordinador-tic" target="_blank">
+            <img src="imagenes/coordinador.png" alt="Coordinador TIC"><p>Coordinador TIC</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67ed5ffc05b481919e2f77b92985b761-acogida-inmigrante" target="_blank">
+            <img src="imagenes/acogida.png" alt="Acogida Inmigrante"><p>Acogida Inmigrante</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-6765a1bdc9288191be1260ca0f4a6bf3-oposiciones-tecnologia" target="_blank">
+            <img src="imagenes/oposiciones.png" alt="Oposiciones Tecnología"><p>Oposiciones Tecnología</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-6744f882a65881918d3d9ac2e269061e-asesor-legal-educativo" target="_blank">
+            <img src="imagenes/asesor.png" alt="Asesor Legal Educativo"><p>Asesor Legal Educativo</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-EKCrX6R6j-acogida-digital" target="_blank">
+            <img src="imagenes/acogida_digital.png" alt="Acogida Digital"><p>Acogida Digital</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67bb597ca6288191bfb4d9e181b18e0d-gpt-de-fcts-de-formacion-profesional" target="_blank">
+            <img src="imagenes/fcts.png" alt="FCTs"><p>FCTs</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67af0021dc308191a565b6fdef97a061-pscd" target="_blank">
+            <img src="imagenes/pscd_2.png" alt="PSCD"><p>PSCD</p>
+        </a>        
+        <a class="gpt-card" href="https://chatgpt.com/g/g-679bc599ed7c81918cb0cfac1a010742-frai-9000" target="_blank">
+            <img src="imagenes/frai9000.png" alt="FRAI 9000"><p>FRAI 9000</p>
+        </a>          
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67da8dc3347c8191af3bd57607715588-frame-to-script" target="_blank">
+            <img src="imagenes/frame.png" alt="Frame to Script"><p>Frame to Script</p>
+        </a> 
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67b76763e23881918359c9630f0c5711-itinerario-digital" target="_blank">
+            <img src="imagenes/itinerario.png" alt="Itinerario Digital"><p>Itinerario Digital</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67ef7fa2ffe881918686ae9c44171226-frame-to-panel" target="_blank">
+            <img src="imagenes/frame_panel.png" alt="Frame to Panel"><p>Frame to Panel</p>
+        </a>
+        <a class="gpt-card" href="https://chatgpt.com/g/g-67f0e2fa34408191ad5690e542fa5e00-testlab-premium" target="_blank">
+            <img src="imagenes/test_lab.png" alt="TestLab Premium"><p>TestLab Premium</p>
+        </a>
+    </div>
+
+    <!-- Modal About -->
+    <div id="aboutModal">
+        <div class="modal-content">
+            <button class="close" onclick="document.getElementById('aboutModal').style.display='none'">&times;</button>
+            <h2>  Sobre GPT Lab</h2>
+            <div class="about-gpt-list">
+                <div class="about-gpt-item">
+                    <img src="imagenes/jefatura.png" alt="Jefatura Estudios">
+                    <div class="about-gpt-text">
+                        <b>Jefatura Estudios</b>
+                        <span>Facilita la gestión organizativa del centro, como horarios, reuniones, actividades académicas, anexos y licencias.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/05/09/pia-lab-ia-gpt-jefatura-de-estudios/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/orientacion.png" alt="Orientación">
+                    <div class="about-gpt-text">
+                        <b>Orientación</b>
+                        <span>Proporciona soporte en la comunicación con alumnos y familias, ayudando en temas relacionados con la orientación académica y profesional.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/05/15/pie-lab-ia-gpt-orientacion/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/investigador.png" alt="Investigador Educativo">
+                    <div class="about-gpt-text">
+                        <b>Investigador Educativo</b>
+                        <span>Realiza una ficha de lectura y evaluación del artículo que indiques.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/03/14/pie-ia-lab-gpt-investigador-academico/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/coordinador.png" alt="Coordinador TIC">
+                    <div class="about-gpt-text">
+                        <b>Coordinador TIC</b>
+                        <span>Herramienta de apoyo a responsables de la Competencia Digital Educativa.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/02/03/pie-ia-lab-gpt-coordinador-tic/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/acogida.png" alt="Acogida Inmigrante">
+                    <div class="about-gpt-text">
+                        <b>Acogida Inmigrante</b>
+                        <span>أُساعِدُكَ فِي التَّكَيُّفِ مَعَ المَدْرَسَةِ. أُجِيبُ عَنْ أَسْئِلَتِكَ بِالإِسْبَانِيَّةِ وَالعَرَبِيَّةِ.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/04/02/pie-ia-lab-gpt-acogida-inmigrante/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                 <div class="about-gpt-item">
+                    <img src="imagenes/oposiciones.png" alt="Oposiciones Tecnología">
+                    <div class="about-gpt-text">
+                        <b>Oposiciones Tecnología</b>
+                        <span>Asistente experto para opositores de Tecnología en Castilla y León.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/04/08/pie-ia-lab-gpt-oposiciones-tecnologia/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/asesor.png" alt="Asesor Legal Educativo">
+                    <div class="about-gpt-text">
+                        <b>Asesor Legal Educativo</b>
+                        <span>Consulta sobre aspectos legales y normativas educativas.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/04/24/pie-ia-lab-gpt-asesor-legal-educativo/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/acogida_digital.png" alt="Acogida Digital">
+                    <div class="about-gpt-text">
+                        <b>Acogida Digital</b>
+                        <span>Guía interactiva para nuevos alumnos y docentes del centro.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2024/11/16/pie-ia-lab-gpt-acogida-digital/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/fcts.png" alt="FCTs">
+                    <div class="about-gpt-text">
+                        <b>FCTs</b>
+                        <span>Asesoramiento a alumnos y profesores en la coordinación, gestión y realización del módulo de Formación en Centros de Trabajo.</span>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/pscd_2.png" alt="PSCD">
+                    <div class="about-gpt-text">
+                        <b>PSCD</b>
+                        <span>Apoyo en temas de Seguridad y Confianza Digital en el entorno escolar.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/02/14/pie-ia-lab-gpt-pscd/" target="_blank">Leer más</a>
+                    </div>
+                </div>                
+                <div class="about-gpt-item">
+                    <img src="imagenes/frai9000.png" alt="FRAI 9000">
+                    <div class="about-gpt-text">
+                        <b>FRAI 9000</b>
+                        <span>Red Neuronal diseñada para asistir a los alumnos del IES Fray Diego Tadeo… o al menos, eso es lo que parece.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/02/07/pie-ia-lab-frai-9000/" target="_blank">Leer más</a>
+                    </div>
+                </div> 
+                <div class="about-gpt-item">
+                    <img src="imagenes/frame.png" alt="Frame to Script">
+                    <div class="about-gpt-text">
+                        <b>Frame to Script</b>
+                        <span>Sube una foto y deja que este GPT la convierta en una descripción cinematográfica detallada y un guion de película completamente desarrollado.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/03/20/pie-ia-lab-gpt-frame-to-script/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/itinerario.png" alt="Itinerario Digital">
+                    <div class="about-gpt-text">
+                        <b>Itinerario Digital</b>
+                        <span>Secuenciación de contenidos para la adquisición de la competencia digital.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/04/12/pie-ia-lab-gpt-itinerario-digital/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/frame_panel.png" alt="Frame to Panel">
+                    <div class="about-gpt-text">
+                        <b>Frame to Panel</b>
+                        <span>Convierte cualquier imagen o escena en una viñeta de storyboard cinematográfico con estilo cómic.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/04/04/pie-ia-lab-gpt-frame-to-panel/" target="_blank">Leer más</a>
+                    </div>
+                </div>
+                <div class="about-gpt-item">
+                    <img src="imagenes/test_lab.png" alt="TestLab Premium">
+                    <div class="about-gpt-text">
+                        <b>TestLab Premium</b>
+                        <span>Asistente educativo inteligente diseñado para revolucionar la evaluación y autoevaluación en Secundaria, Bachillerato, y Ciclos Formativos.</span>
+                        <a class="about-gpt-link" href="https://tecnologiaingenieria.wordpress.com/2025/04/11/pie-ia-lab-gpt-testlab-premium/" target="_blank">Leer más</a>
+                    </div>
+                </div>                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mostrar ventana modal al pulsar el botón
+        document.getElementById('aboutBtn').onclick = function() {
+            document.getElementById('aboutModal').style.display = 'flex';
+        }
+        // Permitir cerrar modal con ESC o click fuera
+        window.onclick = function(event) {
+            var modal = document.getElementById('aboutModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        document.addEventListener('keydown', function(event) {
+            if(event.key === "Escape") {
+                document.getElementById('aboutModal').style.display = 'none';
+            }
+        });
+        // Splash screen
+        window.onload = function() {
+            setTimeout(function() {
+                var splash = document.getElementById('splash');
+                splash.style.opacity = 0;
+                setTimeout(function(){ splash.style.display = 'none'; }, 700);
+            }, 1800); // Cambia la duración aquí (milisegundos)
+        }
+    </script>
+</body>
+</html>
+
